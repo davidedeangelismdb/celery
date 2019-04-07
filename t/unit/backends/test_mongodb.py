@@ -80,7 +80,8 @@ class test_MongoBackend:
                'mongo1.example.com:27017,'
                'mongo2.example.com:27017,'
                'mongo3.example.com:27017/'
-               'celerydatabase?replicaSet=rs0')
+               'celerydatabase?replicaSet=rs0'
+               '&authSource=admin')
         mb = MongoBackend(app=self.app, url=uri)
         assert mb.mongo_host == [
             'mongo1.example.com:27017',
@@ -90,6 +91,7 @@ class test_MongoBackend:
         assert mb.options == dict(
             mb._prepare_client_options(),
             replicaset='rs0',
+            authsource='admin'
         )
         assert mb.user == 'celeryuser'
         assert mb.password == 'celerypassword'
@@ -102,6 +104,7 @@ class test_MongoBackend:
             'database': 'another_db',
             'options': {
                 'socketKeepAlive': True,
+                'authsource':'another_db'
             },
         }
         mb = MongoBackend(app=self.app, url=uri)
@@ -114,6 +117,7 @@ class test_MongoBackend:
             mb._prepare_client_options(),
             replicaset='rs1',
             socketKeepAlive=True,
+            authsource='another_db'
         )
         assert mb.user == 'backenduser'
         assert mb.password == 'celerypassword'
