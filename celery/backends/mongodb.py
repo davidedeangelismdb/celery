@@ -54,6 +54,7 @@ class MongoBackend(BaseBackend):
     groupmeta_collection = 'celery_groupmeta'
     max_pool_size = 10
     options = None
+    authsource = 'admin'
 
     supports_autoexpire = False
 
@@ -115,7 +116,7 @@ class MongoBackend(BaseBackend):
             self.groupmeta_collection = config.pop(
                 'groupmeta_collection', self.groupmeta_collection,
             )
-
+            # authsource can be configured as connection param in the options
             self.options.update(config.pop('options', {}))
             self.options.update(config)
 
@@ -270,7 +271,14 @@ class MongoBackend(BaseBackend):
         conn = self._get_connection()
         db = conn[self.database_name]
         if self.user and self.password:
-            if not db.authenticate(self.user, self.password):
+            # /database and ?<options> are optionals components
+            # if a username:password is provided the default auth source is
+            # the admin DB
+            source = self.options.get('authsource',
+                                      self.database_name or
+                                      self.authsource)
+            if not db.authenticate(self.user, self.password, source=source):
+
                 raise ImproperlyConfigured(
                     'Invalid MongoDB username or password.')
         return db
